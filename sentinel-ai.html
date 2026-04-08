@@ -5,184 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Sentinel AI — Cybersecurity Operations Center</title>
 <style>
+  /* (Keep all your previous CSS as-is) */
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Courier New', monospace;
-    background: #060a10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  #root {
-    background: #0a0e14;
-    color: #e6f1ff;
-    width: 100%;
-    max-width: 860px;
-    min-height: 600px;
-    display: flex;
-    flex-direction: column;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #1a2540;
-    box-shadow: 0 0 60px rgba(86,182,247,0.06);
-  }
-  #header {
-    background: #0d1117;
-    border-bottom: 1px solid #1a2540;
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  body { font-family: 'Courier New', monospace; background: #060a10; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  #root { background: #0a0e14; color: #e6f1ff; width: 100%; max-width: 860px; min-height: 600px; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid #1a2540; box-shadow: 0 0 60px rgba(86,182,247,0.06); }
+  #header { background: #0d1117; border-bottom: 1px solid #1a2540; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; }
   .dot-red { background: #ff5f57; }
   .dot-yellow { background: #febc2e; }
   .dot-green { background: #28c840; }
   #title { font-size: 13px; color: #6e8cb5; margin-left: 8px; letter-spacing: 0.08em; }
-  #status {
-    margin-left: auto;
-    font-size: 11px;
-    color: #28c840;
-    letter-spacing: 0.1em;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  #status::before {
-    content: '';
-    display: inline-block;
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: #28c840;
-    animation: pulse 1.5s infinite;
-  }
+  #status { margin-left: auto; font-size: 11px; color: #28c840; letter-spacing: 0.1em; display: flex; align-items: center; gap: 6px; }
+  #status::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #28c840; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  #toolbar {
-    display: flex;
-    gap: 4px;
-    padding: 8px 16px;
-    border-bottom: 1px solid #1a2540;
-    background: #0d1117;
-    flex-wrap: wrap;
-  }
-  .tool-btn {
-    background: transparent;
-    border: 1px solid #1e3050;
-    color: #7aa2cc;
-    padding: 5px 12px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    cursor: pointer;
-    letter-spacing: 0.05em;
-    transition: all 0.15s;
-  }
+  #toolbar { display: flex; gap: 4px; padding: 8px 16px; border-bottom: 1px solid #1a2540; background: #0d1117; flex-wrap: wrap; }
+  .tool-btn { background: transparent; border: 1px solid #1e3050; color: #7aa2cc; padding: 5px 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11px; cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
   .tool-btn:hover { background: #1a2d4a; color: #a8d4ff; border-color: #2e5080; }
   .tool-btn.active { background: #1a3a5e; color: #56b6f7; border-color: #2e7abd; }
 
-  #chat-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 380px;
-    max-height: 480px;
-  }
-  .msg {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    animation: fadeIn 0.2s ease;
-  }
+  #chat-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 380px; max-height: 480px; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn 0.2s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-  .msg-tag {
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 3px;
-    white-space: nowrap;
-    margin-top: 2px;
-    letter-spacing: 0.08em;
-    flex-shrink: 0;
-  }
+  .msg-tag { font-size: 10px; padding: 2px 7px; border-radius: 3px; white-space: nowrap; margin-top: 2px; letter-spacing: 0.08em; flex-shrink: 0; }
   .tag-user { background: #1a3a5e; color: #56b6f7; border: 1px solid #2e5a8a; }
   .tag-ai   { background: #1a3a1a; color: #4ec94e; border: 1px solid #2a5a2a; }
   .tag-sys  { background: #3a1a1a; color: #f07070; border: 1px solid #5a2a2a; }
   .msg-body { font-size: 13px; line-height: 1.65; color: #c8d8ee; flex: 1; }
   .msg-body strong { color: #f0c070; font-weight: normal; }
-  .msg-body code {
-    background: #0f1e30;
-    color: #7ec8a8;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 12px;
-  }
-  .severity {
-    display: inline-block;
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 11px;
-    margin-left: 4px;
-  }
+  .msg-body code { background: #0f1e30; color: #7ec8a8; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .severity { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-left: 4px; }
   .sev-critical { background: #5a1a1a; color: #ff6060; }
   .sev-high     { background: #3a2a0a; color: #f0a030; }
   .sev-medium   { background: #1a2a3a; color: #70a8e0; }
   .sev-low      { background: #1a2a1a; color: #70c870; }
 
-  #thinking {
-    display: none;
-    gap: 10px;
-    align-items: center;
-    padding: 4px 20px;
-  }
+  #thinking { display: none; gap: 10px; align-items: center; padding: 4px 20px; }
   #thinking.show { display: flex; }
-  .think-dots span {
-    display: inline-block;
-    width: 6px; height: 6px;
-    background: #4ec94e;
-    border-radius: 50%;
-    animation: blink 1.2s infinite;
-    margin: 0 2px;
-  }
+  .think-dots span { display: inline-block; width: 6px; height: 6px; background: #4ec94e; border-radius: 50%; animation: blink 1.2s infinite; margin: 0 2px; }
   .think-dots span:nth-child(2){animation-delay:0.2s}
   .think-dots span:nth-child(3){animation-delay:0.4s}
   @keyframes blink{0%,100%{opacity:0.2}50%{opacity:1}}
 
-  #input-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border-top: 1px solid #1a2540;
-    background: #0d1117;
-  }
+  #input-row { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-top: 1px solid #1a2540; background: #0d1117; }
   #prompt-label { color: #2e7abd; font-size: 13px; letter-spacing: 0.05em; flex-shrink: 0; }
-  #user-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #e6f1ff;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    outline: none;
-    caret-color: #56b6f7;
-  }
+  #user-input { flex: 1; background: transparent; border: none; color: #e6f1ff; font-family: 'Courier New', monospace; font-size: 13px; outline: none; caret-color: #56b6f7; }
   #user-input::placeholder { color: #2e4060; }
-  #send-btn {
-    background: #1a3a5e;
-    border: 1px solid #2e7abd;
-    color: #56b6f7;
-    padding: 5px 14px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
+  #send-btn { background: #1a3a5e; border: 1px solid #2e7abd; color: #56b6f7; padding: 5px 14px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; cursor: pointer; transition: all 0.15s; }
   #send-btn:hover { background: #1e4a78; }
   #send-btn:disabled { opacity: 0.4; cursor: default; }
 </style>
@@ -233,26 +102,15 @@
 </div>
 
 <script>
-// ============================================================
-//  CONFIG — paste your Anthropic API key here
-// ============================================================
-const API_KEY = 'YOUR_ANTHROPIC_API_KEY';   // <-- replace this
-const MODEL   = 'claude-sonnet-4-20250514';
-// ============================================================
-
 let mode = 'analyst';
 let history = [];
 
 const modePrompts = {
-  analyst: `You are Sentinel, an elite cybersecurity SOC analyst AI assistant. You speak concisely in analyst style — direct, technical, actionable. Use markdown-style formatting with **bold** for key terms. When mentioning severity levels, tag them as [CRITICAL], [HIGH], [MEDIUM], or [LOW]. Help with: log analysis, IOC investigation, SIEM queries, threat hunting, CVE analysis, malware indicators, network forensics, attack patterns (MITRE ATT&CK), and incident triage. Be specific, cite techniques, give actionable next steps. Keep responses focused and under 200 words unless detail is requested.`,
-
-  threat: `You are Sentinel in Threat Intelligence mode. Focus on threat actors, TTPs, IOCs, campaign tracking, attribution, dark web intel, STIX/TAXII, threat feeds, and geopolitical context. Use MITRE ATT&CK framework references where applicable. Be concise and intelligence-report style. Tag severity levels as [CRITICAL], [HIGH], [MEDIUM], or [LOW].`,
-
-  incident: `You are Sentinel in Incident Response mode. Guide through IR playbooks: containment, eradication, recovery. Ask clarifying questions about scope, affected systems, timeline. Help draft communications, document evidence, and run through NIST/SANS IR frameworks. Prioritize containment actions first. Tag severity as [CRITICAL], [HIGH], [MEDIUM], or [LOW].`,
-
-  forensics: `You are Sentinel in Digital Forensics mode. Help with disk/memory forensics, artifact analysis, timeline reconstruction, chain of custody, log parsing, file carving, registry analysis, and forensic tool usage (Autopsy, Volatility, FTK, Wireshark). Be methodical and evidence-focused.`,
-
-  pentest: `You are Sentinel in Penetration Testing Assist mode. Help with ethical pen testing methodology: recon, scanning, exploitation, post-exploitation, and reporting. Reference common frameworks (PTES, OWASP, OSSTMM). Always emphasize that testing must be authorized. Help with tool syntax (nmap, metasploit, burpsuite, etc.) and technique explanations for authorized testing only.`
+  analyst: `You are Sentinel, an elite cybersecurity SOC analyst AI assistant. Speak concisely in analyst style, use markdown formatting, tag severity, help with logs, IOC, SIEM, malware, MITRE ATT&CK. Be actionable and direct.`,
+  threat: `You are Sentinel in Threat Intelligence mode. Focus on threat actors, TTPs, IOCs, campaign tracking, attribution, dark web intel, STIX/TAXII, threat feeds. Be concise, tag severity.`,
+  incident: `You are Sentinel in Incident Response mode. Guide through IR playbooks: containment, eradication, recovery. Ask clarifying questions about scope, affected systems, timeline.`,
+  forensics: `You are Sentinel in Digital Forensics mode. Help with disk/memory forensics, artifact analysis, timeline reconstruction, chain of custody, log parsing.`,
+  pentest: `You are Sentinel in Penetration Testing Assist mode. Help with recon, scanning, exploitation, post-exploitation, reporting. Always emphasize authorized testing only.`
 };
 
 function setMode(m, btn) {
@@ -285,9 +143,9 @@ function formatResponse(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
     .replace(/\[CRITICAL\]/g, '<span class="severity sev-critical">CRITICAL</span>')
-    .replace(/\[HIGH\]/g,     '<span class="severity sev-high">HIGH</span>')
-    .replace(/\[MEDIUM\]/g,   '<span class="severity sev-medium">MEDIUM</span>')
-    .replace(/\[LOW\]/g,      '<span class="severity sev-low">LOW</span>')
+    .replace(/\[HIGH\]/g, '<span class="severity sev-high">HIGH</span>')
+    .replace(/\[MEDIUM\]/g, '<span class="severity sev-medium">MEDIUM</span>')
+    .replace(/\[LOW\]/g, '<span class="severity sev-low">LOW</span>')
     .replace(/\n/g, '<br>');
 }
 
@@ -307,24 +165,17 @@ async function sendMsg() {
   document.getElementById('chat-area').scrollTop = 99999;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('http://localhost:3000/api/ask', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1000,
-        system: modePrompts[mode],
-        messages: history
+        model: 'claude-sonnet-4-20250514',
+        max_tokens_to_sample: 1000,
+        prompt: `${modePrompts[mode]}\n\nHuman: ${text}\nAssistant:`
       })
     });
-
-    const data  = await res.json();
-    const reply = data.content?.map(c => c.text || '').join('') || 'No response received.';
+    const data = await res.json();
+    const reply = data.completion || 'No response received.';
     history.push({ role: 'assistant', content: reply });
     thinking.classList.remove('show');
     addMsg('ai', formatResponse(reply));
@@ -341,5 +192,6 @@ document.getElementById('user-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') sendMsg();
 });
 </script>
+
 </body>
 </html>
