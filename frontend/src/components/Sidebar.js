@@ -1,18 +1,11 @@
 'use client';
 import { useState } from 'react';
-import Image from 'next/image';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { MessageSquarePlus, Trash2, LogOut, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquarePlus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 
-export default function Sidebar({ user, conversations, activeConversation, onSelect, onNew, onDelete }) {
-  const { logout } = useAuth();
-  const router     = useRouter();
-  const [collapsed, setCollapsed]     = useState(false);
+export default function Sidebar({ conversations, activeConversation, onSelect, onNew, onDelete }) {
+  const [collapsed,     setCollapsed]     = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
-
-  const handleLogout = async () => { await logout(); router.push('/'); };
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
@@ -93,27 +86,6 @@ export default function Sidebar({ user, conversations, activeConversation, onSel
           ))}
         </div>
       )}
-
-      {/* User / Logout */}
-      <div className="p-3 border-t border-border shrink-0">
-        <div className={clsx('flex items-center gap-3', collapsed && 'justify-center')}>
-          {user.avatar_url
-            ? <Image src={user.avatar_url} alt={user.name} width={32} height={32} className="rounded-full shrink-0" />
-            : <div className="w-8 h-8 rounded-full bg-purple-600/30 border border-purple-500/30 flex items-center justify-center text-sm shrink-0">{user.name?.[0]}</div>
-          }
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-200 truncate">{user.name}</p>
-              <p className="text-[10px] text-gray-600 truncate">{user.email}</p>
-            </div>
-          )}
-          {!collapsed && (
-            <button onClick={handleLogout} className="text-gray-600 hover:text-red-400 transition-colors p-1" title="Sign out">
-              <LogOut size={14} />
-            </button>
-          )}
-        </div>
-      </div>
     </aside>
   );
 }

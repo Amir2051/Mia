@@ -6,7 +6,7 @@ import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 
-export default function ChatLayout({ user }) {
+export default function ChatLayout() {
   const { getToken } = useAuth();
   const chat = useChat(getToken);
 
@@ -15,7 +15,6 @@ export default function ChatLayout({ user }) {
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
       <Sidebar
-        user={user}
         conversations={chat.conversations}
         activeConversation={chat.activeConversation}
         onSelect={chat.selectConversation}
@@ -26,7 +25,6 @@ export default function ChatLayout({ user }) {
         <ChatWindow
           messages={chat.messages}
           streaming={chat.streaming}
-          activeConversation={chat.activeConversation}
         />
         <ChatInput
           onSend={chat.sendMessage}

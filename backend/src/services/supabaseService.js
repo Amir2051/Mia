@@ -7,39 +7,22 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// ── Users ────────────────────────────────────────────────────────────────────
-export async function upsertUser({ id, email, name, avatar_url, provider }) {
-  const { data, error } = await supabase
-    .from('users')
-    .upsert({ id, email, name, avatar_url, provider, updated_at: new Date().toISOString() }, { onConflict: 'id' })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-export async function getUserById(id) {
-  const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
-  if (error) throw error;
-  return data;
-}
-
 // ── Conversations ─────────────────────────────────────────────────────────────
-export async function createConversation(userId, title = 'New conversation') {
+export async function createConversation(sessionId, title = 'New Chat') {
   const { data, error } = await supabase
     .from('conversations')
-    .insert({ user_id: userId, title })
+    .insert({ session_id: sessionId, title })
     .select()
     .single();
   if (error) throw error;
   return data;
 }
 
-export async function getUserConversations(userId) {
+export async function getSessionConversations(sessionId) {
   const { data, error } = await supabase
     .from('conversations')
     .select('*')
-    .eq('user_id', userId)
+    .eq('session_id', sessionId)
     .order('updated_at', { ascending: false })
     .limit(50);
   if (error) throw error;
@@ -54,25 +37,24 @@ export async function updateConversationTitle(id, title) {
   if (error) throw error;
 }
 
-export async function deleteConversation(id, userId) {
+export async function deleteConversation(id, sessionId) {
   const { error } = await supabase
     .from('conversations')
     .delete()
     .eq('id', id)
-    .eq('user_id', userId);
+    .eq('session_id', sessionId);
   if (error) throw error;
 }
 
 // ── Messages ──────────────────────────────────────────────────────────────────
-export async function saveMessage({ conversation_id, role, content, tokens_used = 0 }) {
+export async function saveMessage({ conversation_id, role, content }) {
   const { data, error } = await supabase
     .from('messages')
-    .insert({ conversation_id, role, content, tokens_used })
+    .insert({ conversation_id, role, content })
     .select()
     .single();
   if (error) throw error;
 
-  // Bump conversation updated_at
   await supabase
     .from('conversations')
     .update({ updated_at: new Date().toISOString() })

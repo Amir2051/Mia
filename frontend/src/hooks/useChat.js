@@ -3,49 +3,43 @@ import { useState, useCallback, useRef } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || '';
 
-export function useChat(getToken) {
-  const [conversations,     setConversations]     = useState([]);
+export function useChat(getSessionId) {
+  const [conversations,      setConversations]      = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages,           setMessages]           = useState([]);
-  const [loading,            setLoading]            = useState(false);
   const [streaming,          setStreaming]           = useState(false);
   const abortRef = useRef(null);
 
-  const authHeaders = useCallback(() => ({
+  const headers = useCallback(() => ({
     'Content-Type':  'application/json',
-    'Authorization': `Bearer ${getToken()}`
-  }), [getToken]);
+    'X-Session-ID':  getSessionId()
+  }), [getSessionId]);
 
-  // Load conversations list
   const loadConversations = useCallback(async () => {
-    const res  = await fetch(`${API}/api/chat/conversations`, { headers: authHeaders() });
+    const res  = await fetch(`${API}/api/chat/conversations`, { headers: headers() });
     const data = await res.json();
     setConversations(Array.isArray(data) ? data : []);
-  }, [authHeaders]);
+  }, [headers]);
 
-  // Select / load a conversation
   const selectConversation = useCallback(async (conv) => {
     setActiveConversation(conv);
     setMessages([]);
-    const res  = await fetch(`${API}/api/chat/conversations/${conv.id}/messages`, { headers: authHeaders() });
+    const res  = await fetch(`${API}/api/chat/conversations/${conv.id}/messages`, { headers: headers() });
     const data = await res.json();
     setMessages(Array.isArray(data) ? data : []);
-  }, [authHeaders]);
+  }, [headers]);
 
-  // New conversation
   const newConversation = useCallback(() => {
     setActiveConversation(null);
     setMessages([]);
   }, []);
 
-  // Delete conversation
   const deleteConversation = useCallback(async (id) => {
-    await fetch(`${API}/api/chat/conversations/${id}`, { method: 'DELETE', headers: authHeaders() });
+    await fetch(`${API}/api/chat/conversations/${id}`, { method: 'DELETE', headers: headers() });
     setConversations(prev => prev.filter(c => c.id !== id));
     if (activeConversation?.id === id) newConversation();
-  }, [authHeaders, activeConversation, newConversation]);
+  }, [headers, activeConversation, newConversation]);
 
-  // Send message (streaming)
   const sendMessage = useCallback(async (content) => {
     if (!content.trim() || streaming) return;
 
@@ -55,51 +49,55 @@ export function useChat(getToken) {
     setMessages(prev => [...prev, userMsg]);
     setStreaming(true);
 
-    // Placeholder for streaming reply
     const placeholderId = Date.now() + 1;
     setMessages(prev => [...prev, { role: 'assistant', content: '', id: placeholderId, streaming: true }]);
+
+    let currentConvId = activeConversation?.id;
 
     try {
       abortRef.current = new AbortController();
       const res = await fetch(`${API}/api/chat/stream`, {
         method:  'POST',
-        headers: authHeaders(),
-        body:    JSON.stringify({ content, history, conversation_id: activeConversation?.id }),
+        headers: headers(),
+        body:    JSON.stringify({ content, history, conversation_id: currentConvId }),
         signal:  abortRef.current.signal
       });
 
       if (!res.ok) throw new Error('Stream failed');
 
-      const reader = res.body.getReader();
+      const reader  = res.body.getReader();
       const decoder = new TextDecoder();
       let full = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+        const lines = decoder.decode(value).split('\n').filter(l => l.startsWith('data: '));
         for (const line of lines) {
-          const data = line.slice(6);
-          if (data === '[DONE]') break;
+          const payload = line.slice(6);
+          if (payload === '[DONE]') break;
           try {
-            const { delta } = JSON.parse(data);
-            full += delta;
-            setMessages(prev => prev.map(m =>
-              m.id === placeholderId ? { ...m, content: full } : m
-            ));
+            const parsed = JSON.parse(payload);
+            // Backend sends conversation_id on first chunk when auto-created
+            if (parsed.conversation_id && !currentConvId) {
+              currentConvId = parsed.conversation_id;
+              setActiveConversation({ id: currentConvId, title: content.slice(0, 60) });
+            }
+            if (parsed.delta) {
+              full += parsed.delta;
+              setMessages(prev => prev.map(m =>
+                m.id === placeholderId ? { ...m, content: full } : m
+              ));
+            }
           } catch {}
         }
       }
 
-      // Finalize message
       setMessages(prev => prev.map(m =>
         m.id === placeholderId ? { ...m, content: full, streaming: false } : m
       ));
 
-      // Refresh conversations to pick up new/updated conv
       await loadConversations();
-
     } catch (err) {
       if (err.name === 'AbortError') {
         setMessages(prev => prev.filter(m => m.id !== placeholderId));
@@ -113,13 +111,12 @@ export function useChat(getToken) {
     } finally {
       setStreaming(false);
     }
-  }, [messages, streaming, activeConversation, authHeaders, loadConversations]);
+  }, [messages, streaming, activeConversation, headers, loadConversations]);
 
   const stopStreaming = () => abortRef.current?.abort();
 
   return {
-    conversations, activeConversation, messages,
-    loading, streaming,
+    conversations, activeConversation, messages, streaming,
     loadConversations, selectConversation, newConversation,
     deleteConversation, sendMessage, stopStreaming
   };
