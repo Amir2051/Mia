@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* { box-sizing: border-box; }
+
+:root {
+  --bg:        #050810;
+  --card:      #0b0f1e;
+  --cyan:      #00e5ff;
+  --cyan-d:    #0099bb;
+  --purple:    #7c4dff;
+  --purple-l:  #b388ff;
+  --text:      #e0e8ff;
+  --muted:     #6b7fa8;
+  --border:    rgba(0,229,255,.12);
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+
+/* Grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { to { background-position: 44px 44px; } }
+
+/* Glow effects */
+.glow-cyan   { box-shadow: 0 0 20px rgba(0,229,255,.35), 0 0 40px rgba(0,229,255,.15); }
+.glow-purple { box-shadow: 0 0 20px rgba(124,77,255,.35), 0 0 40px rgba(124,77,255,.15); }
+.text-gradient {
+  background: linear-gradient(90deg, var(--cyan), var(--purple-l));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Prose for markdown */
+.mia-prose h1, .mia-prose h2, .mia-prose h3 { color: var(--cyan); font-weight: 700; margin: 12px 0 6px; }
+.mia-prose p   { margin-bottom: 8px; line-height: 1.7; }
+.mia-prose ul  { padding-left: 18px; margin-bottom: 8px; }
+.mia-prose li  { margin-bottom: 4px; }
+.mia-prose code { background: rgba(0,229,255,.08); padding: 1px 5px; border-radius: 4px; font-size: .82em; color: var(--cyan); }
+.mia-prose pre  { background: rgba(0,0,0,.5); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 10px 0; }
+.mia-prose pre code { background: none; padding: 0; color: #a6e22e; }
+.mia-prose strong { color: #c0cfff; }
+.mia-prose a  { color: var(--cyan); text-decoration: underline; }
+.mia-prose blockquote { border-left: 3px solid var(--purple); padding-left: 12px; color: var(--muted); margin: 8px 0; }
