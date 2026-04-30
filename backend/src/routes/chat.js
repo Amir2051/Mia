@@ -7,68 +7,36 @@ import {
 
 const router = Router();
 
+// Wrap Supabase calls so missing/bad credentials don't crash the server
+async function tryDB(fn) {
+  try { return await fn(); } catch { return null; }
+}
+
 // GET /api/chat/conversations
-router.get('/conversations', async (req, res, next) => {
-  try {
-    const convs = await getSessionConversations(req.sessionId);
-    res.json(convs);
-  } catch (err) { next(err); }
+router.get('/conversations', async (req, res) => {
+  const data = await tryDB(() => getSessionConversations(req.sessionId));
+  res.json(data || []);
 });
 
 // POST /api/chat/conversations
-router.post('/conversations', async (req, res, next) => {
-  try {
-    const conv = await createConversation(req.sessionId, req.body.title);
-    res.status(201).json(conv);
-  } catch (err) { next(err); }
+router.post('/conversations', async (req, res) => {
+  const conv = await tryDB(() => createConversation(req.sessionId, req.body.title));
+  conv ? res.status(201).json(conv) : res.status(503).json({ error: 'DB unavailable' });
 });
 
 // DELETE /api/chat/conversations/:id
-router.delete('/conversations/:id', async (req, res, next) => {
-  try {
-    await deleteConversation(req.params.id, req.sessionId);
-    res.json({ success: true });
-  } catch (err) { next(err); }
+router.delete('/conversations/:id', async (req, res) => {
+  await tryDB(() => deleteConversation(req.params.id, req.sessionId));
+  res.json({ success: true });
 });
 
 // GET /api/chat/conversations/:id/messages
-router.get('/conversations/:id/messages', async (req, res, next) => {
-  try {
-    const msgs = await getConversationMessages(req.params.id);
-    res.json(msgs);
-  } catch (err) { next(err); }
+router.get('/conversations/:id/messages', async (req, res) => {
+  const data = await tryDB(() => getConversationMessages(req.params.id));
+  res.json(data || []);
 });
 
-// POST /api/chat/message — persist + reply (non-streaming)
-router.post('/message', async (req, res, next) => {
-  try {
-    const { conversation_id, content, history = [] } = req.body;
-    if (!content?.trim()) return res.status(400).json({ error: 'content is required' });
-
-    let convId = conversation_id;
-    if (!convId) {
-      const conv = await createConversation(req.sessionId, content.slice(0, 60));
-      convId = conv.id;
-    }
-
-    await saveMessage({ conversation_id: convId, role: 'user', content });
-
-    const messages    = [...history.slice(-20), { role: 'user', content }];
-    const aiResponse  = await chat({ messages });
-
-    const saved = await saveMessage({
-      conversation_id: convId,
-      role:            'assistant',
-      content:         aiResponse.content
-    });
-
-    if (history.length === 0) updateConversationTitle(convId, content.slice(0, 60));
-
-    res.json({ conversation_id: convId, message: saved, content: aiResponse.content });
-  } catch (err) { next(err); }
-});
-
-// POST /api/chat/stream — streaming SSE
+// POST /api/chat/stream — streaming SSE (AI works even if DB is down)
 router.post('/stream', async (req, res, next) => {
   try {
     const { content, history = [], conversation_id } = req.body;
@@ -78,16 +46,18 @@ router.post('/stream', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    // Resolve or create conversation, then send its ID to the client
+    // Persist conversation (best-effort)
     let convId = conversation_id;
     if (!convId) {
-      const conv = await createConversation(req.sessionId, content.slice(0, 60));
-      convId = conv.id;
-      res.write(`data: ${JSON.stringify({ conversation_id: convId })}\n\n`);
+      const conv = await tryDB(() => createConversation(req.sessionId, content.slice(0, 60)));
+      if (conv) {
+        convId = conv.id;
+        res.write(`data: ${JSON.stringify({ conversation_id: convId })}\n\n`);
+      }
     }
+    if (convId) await tryDB(() => saveMessage({ conversation_id: convId, role: 'user', content }));
 
-    await saveMessage({ conversation_id: convId, role: 'user', content });
-
+    // Stream AI response
     const messages = [...history.slice(-20), { role: 'user', content }];
     const stream   = await chat({ messages, stream: true });
 
@@ -100,8 +70,11 @@ router.post('/stream', async (req, res, next) => {
       }
     }
 
-    await saveMessage({ conversation_id: convId, role: 'assistant', content: full });
-    if (history.length === 0) updateConversationTitle(convId, content.slice(0, 60));
+    // Save AI reply (best-effort)
+    if (convId) {
+      await tryDB(() => saveMessage({ conversation_id: convId, role: 'assistant', content: full }));
+      if (!history.length) tryDB(() => updateConversationTitle(convId, content.slice(0, 60)));
+    }
 
     res.write('data: [DONE]\n\n');
     res.end();

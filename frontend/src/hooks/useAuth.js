@@ -1,6 +1,5 @@
 'use client';
 import { useCallback } from 'react';
-import { randomUUID } from 'crypto'; // polyfilled by Next.js
 
 const SESSION_KEY = 'mia_session_id';
 
