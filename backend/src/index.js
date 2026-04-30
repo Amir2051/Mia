@@ -10,7 +10,8 @@ import { fileURLToPath } from 'url';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
-import chatRoutes from './routes/chat.js';
+import chatRoutes        from './routes/chat.js';
+import investigateRoutes from './routes/investigate.js';
 import { sessionMiddleware } from './middleware/sessionMiddleware.js';
 import { logger } from './utils/logger.js';
 
@@ -37,7 +38,8 @@ app.use(sessionMiddleware);
 
 app.get('/health', (_, res) => res.json({ status: 'ok', service: 'Mia API', ts: new Date().toISOString() }));
 
-app.use('/api/chat', chatRoutes);
+app.use('/api/chat',        chatRoutes);
+app.use('/api/investigate', investigateRoutes);
 
 app.use((_, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, _next) => {

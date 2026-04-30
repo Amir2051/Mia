@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { MessageSquarePlus, Trash2, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
+import { MessageSquarePlus, Trash2, ChevronLeft, ChevronRight, Shield, Search } from 'lucide-react';
 import clsx from 'clsx';
 
-export default function Sidebar({ conversations, activeConversation, onSelect, onNew, onDelete }) {
+export default function Sidebar({ conversations, activeConversation, onSelect, onNew, onDelete, onInvestigate }) {
   const [collapsed,     setCollapsed]     = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
@@ -55,8 +55,22 @@ export default function Sidebar({ conversations, activeConversation, onSelect, o
         )}
       </div>
 
+      {/* ── Investigate ─────────────────────────────────────── */}
+      <div className="px-2.5 pt-2.5 shrink-0">
+        <button onClick={onInvestigate}
+          className={clsx('w-full flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-mono transition-all mb-2', collapsed && 'justify-center px-0')}
+          style={{ background: 'rgba(255,149,0,.06)', border: '1px solid rgba(255,149,0,.3)', color: '#ff9500' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,149,0,.12)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,149,0,.1)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,149,0,.06)'; e.currentTarget.style.boxShadow = 'none'; }}
+          title="Wallet Investigation"
+        >
+          <Search size={13} />
+          {!collapsed && 'INVESTIGATE WALLET'}
+        </button>
+      </div>
+
       {/* ── New session ─────────────────────────────────────── */}
-      <div className="p-2.5 shrink-0">
+      <div className="px-2.5 pb-2.5 shrink-0">
         <button onClick={onNew}
           className={clsx('w-full flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-mono transition-all', collapsed && 'justify-center px-0')}
           style={{ background: 'rgba(0,255,65,.05)', border: '1px solid rgba(0,255,65,.2)', color: '#00ff41' }}
