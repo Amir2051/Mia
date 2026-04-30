@@ -4,6 +4,11 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 import chatRoutes from './routes/chat.js';
 import { sessionMiddleware } from './middleware/sessionMiddleware.js';

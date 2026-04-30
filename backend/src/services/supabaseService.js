@@ -1,11 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-dotenv.config();
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+// Lazy client — won't crash if env vars are missing at startup
+let _supabase = null;
+function getClient() {
+  if (!_supabase) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) return null;
+    _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  }
+  return _supabase;
+}
+const supabase = new Proxy({}, {
+  get: (_, prop) => {
+    const client = getClient();
+    if (!client) throw new Error('Supabase not configured');
+    return client[prop].bind(client);
+  }
+});
 
 // ── Conversations ─────────────────────────────────────────────────────────────
 export async function createConversation(sessionId, title = 'New Chat') {
