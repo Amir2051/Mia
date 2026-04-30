@@ -2,7 +2,8 @@
 import { useState, useCallback } from 'react';
 import { Search, X, Download, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Circle, ExternalLink, FolderOpen } from 'lucide-react';
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+// Use empty string so requests go through Next.js proxy (/api/* → backend)
+const API = '';
 
 const FRAUD_TYPES = [
   'Cryptocurrency Fraud',

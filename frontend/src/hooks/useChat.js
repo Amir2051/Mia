@@ -1,7 +1,8 @@
 'use client';
 import { useState, useCallback, useRef } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+// Use empty string so all /api/* calls go through the Next.js proxy
+const API = '';
 
 export function useChat(getSessionId) {
   const [conversations,      setConversations]      = useState([]);
